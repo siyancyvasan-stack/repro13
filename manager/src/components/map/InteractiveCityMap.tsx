@@ -375,7 +375,9 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
           .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng));
         if (path.length < 2) return;
         routeIds.add(agent.id);
-        const color = agent.trackingStatus === 'online' ? '#2563eb' : agent.trackingStatus === 'gps_delayed' ? '#f59e0b' : '#64748b';
+        const liveGps = agent.trackingStatus === 'online';
+        const punchedIn = agent.shiftStatus === 'WORKING' || agent.shiftActive;
+        const color = liveGps ? '#2563eb' : punchedIn ? '#111827' : agent.trackingStatus === 'gps_delayed' ? '#f59e0b' : '#64748b';
         let line = teamTravelledPolylinesRef.current.get(agent.id);
         if (!line) {
           line = new google.maps.Polyline({ map: mapRef.current, path, strokeColor: color, strokeOpacity: agent.id === selectedAgent?.id ? 0.95 : 0.7, strokeWeight: agent.id === selectedAgent?.id ? 6 : 4, zIndex: 12 });

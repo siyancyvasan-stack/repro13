@@ -248,14 +248,16 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
         .map((point) => [point.lat, point.lng] as L.LatLngExpression);
       if (points.length < 2) return;
       routeIds.add(agent.id);
-      const color = agent.trackingStatus === 'online' ? '#2563eb' : agent.trackingStatus === 'gps_delayed' ? '#f59e0b' : '#64748b';
+      const liveGps = agent.trackingStatus === 'online';
+      const punchedIn = agent.shiftStatus === 'WORKING' || agent.shiftActive;
+      const color = liveGps ? '#2563eb' : punchedIn ? '#111827' : agent.trackingStatus === 'gps_delayed' ? '#f59e0b' : '#64748b';
       let line = allTravelledRoutesRef.current.get(agent.id);
       if (!line) {
-        line = L.polyline(points, { color, weight: agent.id === selectedAgentId ? 6 : 4, opacity: agent.id === selectedAgentId ? 0.95 : 0.7, dashArray: agent.trackingStatus === 'online' ? undefined : '8 8', lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        line = L.polyline(points, { color, weight: agent.id === selectedAgentId ? 6 : 4, opacity: agent.id === selectedAgentId ? 0.95 : 0.7, dashArray: liveGps || punchedIn ? undefined : '8 8', lineCap: 'round', lineJoin: 'round' }).addTo(map);
         allTravelledRoutesRef.current.set(agent.id, line);
       } else {
         line.setLatLngs(points);
-        line.setStyle({ color, weight: agent.id === selectedAgentId ? 6 : 4, opacity: agent.id === selectedAgentId ? 0.95 : 0.7, dashArray: agent.trackingStatus === 'online' ? undefined : '8 8' });
+        line.setStyle({ color, weight: agent.id === selectedAgentId ? 6 : 4, opacity: agent.id === selectedAgentId ? 0.95 : 0.7, dashArray: liveGps || punchedIn ? undefined : '8 8' });
       }
     });
     allTravelledRoutesRef.current.forEach((line, agentId) => {
