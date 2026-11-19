@@ -9,6 +9,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ def
 const FactoryPortalPage = lazy(() => import('./pages/FactoryPortalPage').then((module) => ({ default: module.FactoryPortalPage })));
 const MobileSessionPage = lazy(() => import('./pages/MobileSessionPage').then((module) => ({ default: module.MobileSessionPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const SalesPersonsPage = lazy(() => import('./pages/SalesPersonsPage').then((module) => ({ default: module.SalesPersonsPage })));
 
 const LoadingPortal = () => (
   <div className="min-h-[100dvh] grid place-items-center bg-slate-950 text-sm font-semibold text-cyan-300">
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="/login" element={<LoginPage portal="factory" />} />
                 <Route path="/mobile/session" element={<MobileSessionPage />} />
                 <Route path="/profile" element={<ProtectedRoute allowedRole="factory_manager" loginPath="/login"><ProfilePage /></ProtectedRoute>} />
+                <Route path="/sales-persons" element={<ProtectedRoute allowedRole="factory_manager" loginPath="/login"><SalesPersonsPage /></ProtectedRoute>} />
 
                 {['dashboard', 'orders', 'production', 'products', 'inventory', 'members', 'dispatch', 'sales-tracking', 'retailers', 'contacts', 'invoices', 'reports', 'notifications', 'settings'].map((section) => (
                   <React.Fragment key={section}>

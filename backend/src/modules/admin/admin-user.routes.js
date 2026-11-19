@@ -7,7 +7,7 @@ import { hashPassword } from '../../lib/password.js';
 import db from '../../lib/db.js';
 
 export const adminUserRouter = Router();
-adminUserRouter.use(authenticate, authorize(Role.ADMIN));
+adminUserRouter.use(authenticate, authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER));
 
 const employeeCode = z.string().regex(/^\d{7,10}$/, 'Employee ID must contain 7 to 10 digits.');
 const role = z.enum([Role.AGENT, Role.FACTORY_MANAGER]);
@@ -44,6 +44,7 @@ adminUserRouter.get('/:id', async (req, res) => {
 });
 
 adminUserRouter.post('/', async (req, res) => {
+  if (req.auth.role !== Role.ADMIN) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Only administrators can create users.' } });
   const input = userInput.extend({ password: z.string().min(8).max(128) }).parse(req.body);
   const [existing] = await db.query(
     'SELECT id FROM User WHERE tenantId = ? AND (email = ? OR employeeCode = ?) LIMIT 1',
@@ -64,6 +65,8 @@ adminUserRouter.patch('/:id', async (req, res) => {
   const input = userInput.partial().parse(req.body);
   const [target] = await db.query('SELECT id FROM User WHERE id = ? AND tenantId = ? AND role IN (?, ?) LIMIT 1', [req.params.id, req.auth.tenantId, Role.AGENT, Role.FACTORY_MANAGER]);
   if (!target[0]) return res.status(404).json({ error: { code: 'USER_NOT_FOUND', message: 'User not found.' } });
+  const [targetRole] = await db.query('SELECT role FROM User WHERE id = ? AND tenantId = ? LIMIT 1', [req.params.id, req.auth.tenantId]);
+  if (req.auth.role === Role.FACTORY_MANAGER && targetRole[0]?.role !== Role.AGENT) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Factory managers can maintain sales-person profiles only.' } });
   if (!Object.keys(input).length) return res.status(400).json({ error: { code: 'NO_CHANGES', message: 'No changes supplied.' } });
 
   if (input.email || input.employeeCode) {

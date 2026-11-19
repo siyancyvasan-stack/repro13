@@ -17,7 +17,7 @@ import { FloatingWhatsAppContact } from '../contacts/FloatingWhatsAppContact';
 const items = [
   ['Dashboard', LayoutDashboard, '/dashboard'], ['Orders', ClipboardList, '/orders'],
   ['Production', Factory, '/production'], ['Products', Package, '/products'],
-  ['Inventory', Warehouse, '/inventory'], ['Factory Members', Users, '/members'],
+  ['Inventory', Warehouse, '/inventory'], ['Sales Persons', Users, '/sales-persons'], ['Factory Members', Users, '/members'],
   ['Dispatch', Truck, '/dispatch'], ['Sales Tracking', Navigation, '/sales-tracking'],
   ['Sales Data', Store, '/retailers'],
   ['Invoices', ReceiptText, '/invoices'],
