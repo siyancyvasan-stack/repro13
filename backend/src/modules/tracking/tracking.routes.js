@@ -28,8 +28,8 @@ trackingRouter.post('/heartbeat', authorize(Role.AGENT), async (req, res) => {
         appState: z.enum(['active', 'background', 'inactive']).optional(),
         lastLocalFixAt: z.string().datetime().optional(),
     }).parse(req.body);
-    
     const now = new Date();
+    try {
     const interrupted = input.permission !== 'granted' || !input.servicesEnabled;
     const locationPermission = input.servicesEnabled ? input.permission : 'unavailable';
     const trackingState = interrupted ? 'INTERRUPTED' : 'ACTIVE';
@@ -81,7 +81,14 @@ trackingRouter.post('/heartbeat', authorize(Role.AGENT), async (req, res) => {
     };
     
     io?.to(`tenant:${req.auth.tenantId}`).emit('tracking:agent-location', payload);
-    return res.json({ ok: true, serverReceivedAt: now.toISOString() });
+        return res.json({ ok: true, serverReceivedAt: now.toISOString() });
+    } catch (error) {
+        // Heartbeat is telemetry, not a business transaction. A temporary
+        // profile/schema/alert failure must not produce a noisy 500 loop or
+        // prevent the agent from using shop registration.
+        req.log?.warn?.({ err: error, userId: req.auth.sub }, 'Heartbeat persistence failed');
+        return res.json({ ok: false, degraded: true, serverReceivedAt: now.toISOString() });
+    }
 });
 
 trackingRouter.get('/latest', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER), async (req, res) => {
