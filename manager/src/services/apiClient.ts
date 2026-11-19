@@ -25,6 +25,13 @@ export class ApiError extends Error {
 }
 
 export const isBackendConfigured = true;
+
+/** Public runtime configuration; unlike apiRequest this does not require login. */
+export const publicApiRequest = async <T>(path: string): Promise<T> => {
+  const response = await fetch(`${API_URL}${path}`, { credentials: 'include' });
+  if (!response.ok) throw new Error(`Public API request failed (${response.status})`);
+  return response.json();
+};
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
 };

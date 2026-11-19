@@ -27,11 +27,17 @@ import { broadcastRouter } from '../modules/broadcast/broadcast.routes.js';
 import { fieldIntelligenceRouter } from '../modules/field-intelligence/field-intelligence.routes.js';
 import { adminUserRouter } from '../modules/admin/admin-user.routes.js';
 import { env } from '../config/env.js';
+import db from '../lib/db.js';
 
 export const apiRouter = Router();
 
-apiRouter.get('/config/app-version', (req, res) => {
+apiRouter.get('/config/app-version', async (req, res) => {
+    const [rows] = await db.query(
+        "SELECT configValue FROM AppConfig WHERE configKey = 'manager_app_version' LIMIT 1"
+    ).catch(() => [[]]);
+    const managerVersion = rows[0]?.configValue || env.VITE_MANAGER_APP_VERSION || env.APP_VERSION || '';
     res.json({
+        manager: { version: managerVersion },
         android: {
             latestVersion: env.LATEST_APP_VERSION_ANDROID,
             minimumRequired: env.MIN_APP_VERSION_ANDROID,
