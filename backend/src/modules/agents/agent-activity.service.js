@@ -306,7 +306,12 @@ export const buildAgentActivity = async (agentId, auth, range) => {
     const collectionTarget = selectedPlan ? amount(selectedPlan.collectionTargetLkr) : 0;
     const productiveVisits = visitCards.filter(visit => visit.orderCreated || visit.collectedLkr > 0);
     const retainedLocations = locations.filter(point => point.retainedForDistance);
-    const routePoints = simplifyPoints(retainedLocations).map((point) => ({ latitude: point.latitude, longitude: point.longitude, capturedAt: pointTime(point).toISOString(), accuracy: point.accuracy, speedKmH: point.speedKmH }));
+    // Draw the salesperson's actual GPS trail from every valid capture. The
+    // retained subset is intentionally used for distance/metrics, but using it
+    // for the map can create long straight lines when low-accuracy or slow
+    // movement points were excluded.
+    const routeLocations = locations.filter(point => Number.isFinite(Number(point.latitude)) && Number.isFinite(Number(point.longitude)));
+    const routePoints = simplifyPoints(routeLocations).map((point) => ({ latitude: Number(point.latitude), longitude: Number(point.longitude), capturedAt: pointTime(point).toISOString(), accuracy: point.accuracy, speedKmH: point.speedKmH }));
     const latestBreak = attendances.flatMap(row => row.breaks).at(-1);
     const now = new Date();
     
