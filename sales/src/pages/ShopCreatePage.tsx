@@ -215,7 +215,10 @@ export const ShopCreatePage: React.FC = () => {
         `${form.name} was successfully registered${createdShop.retailerCode ? ` · Shop ID: ${createdShop.retailerCode}` : ""}.`,
         "success",
       );
-      navigate("/sales/shops");
+      // The API assigns the new shop to the signed-in salesperson. Open the
+      // order flow with that persisted shop selected so it is immediately
+      // available for booking without a manual refresh.
+      navigate(`/sales/new-order?shopId=${encodeURIComponent(createdShop.id)}`);
     } catch (e) {
       const message =
         e instanceof ApiError && e.code === "DUPLICATE_RETAILER"
