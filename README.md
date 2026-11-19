@@ -25,6 +25,18 @@ npm run install:all
 
 Fill in `backend/.env` before starting the API. Never commit `.env` files or real credentials.
 
+For map-enabled portal builds, copy the relevant portal template and add the
+Google Maps key and map ID supplied by the Google Cloud project:
+
+```bash
+cp manager/.env.example manager/.env
+cp factory/.env.example factory/.env
+cp sales/.env.example sales/.env
+```
+
+The portals keep an OpenStreetMap fallback when Google Maps credentials are not
+configured. Keep all real keys in the deployment provider's secret settings.
+
 ## Development
 
 Run each service in its own terminal:
