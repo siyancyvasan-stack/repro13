@@ -48,6 +48,7 @@ const formatLastUpdate = (value?: string) => {
 const createAgentPopup = (
   agent: Agent,
   route?: { distanceKm: number; etaMinutes: number },
+  streetAddress?: string,
 ) => {
   const destination = agent.destination;
   const rows = [
@@ -66,6 +67,7 @@ const createAgentPopup = (
     ['ETA', route ? `${route.etaMinutes} min` : agent.etaMinutes == null ? '—' : `${agent.etaMinutes} min`],
     ['Battery', `${agent.batteryLevel ?? 0}%`],
     ['Last GPS update', formatLastUpdate(agent.lastUpdatedAt)],
+    ['Current road / street', streetAddress || agent.currentLocation || 'Resolving location…'],
     ['Accuracy', agent.gpsAccuracyMeters == null ? '—' : `±${Math.round(agent.gpsAccuracyMeters)} m`],
     ['Display delay', Number.isFinite(agent.managerDisplayDelayMs) ? `${(Number(agent.managerDisplayDelayMs) / 1000).toFixed(1)} s` : '—'],
     ['Coordinates', isValidPoint(agent.coordinates) ? `${Number(agent.coordinates.lat).toFixed(6)}, ${Number(agent.coordinates.lng).toFixed(6)}` : '—'],
@@ -93,6 +95,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
   const destinationMarkerRef = useRef<L.Marker>();
   const routeRequestRef = useRef<AbortController>();
   const fittedRef = useRef(false);
+  const addressRef = useRef(new Map<string, string>());
 
   useEffect(() => {
     if (!elementRef.current || mapRef.current) return;
@@ -349,7 +352,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
             map.stop();
             map.fitBounds(plannedRouteRef.current.getBounds(), { padding: [50, 50], maxZoom: 16, animate: false });
             const selectedMarker = markersRef.current.get(selected.id);
-            selectedMarker?.bindPopup(createAgentPopup(selected, route), { maxWidth: 320 });
+            selectedMarker?.bindPopup(createAgentPopup(selected, route, addressRef.current.get(selected.id)), { maxWidth: 320 });
             selectedMarker?.openPopup();
       })
       .catch((error: unknown) => {
@@ -358,6 +361,36 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
         }
       });
     return () => routeRequestRef.current?.abort();
+  }, [agents, selectedAgentId]);
+
+  useEffect(() => {
+    const selected = agents.find((agent) => agent.id === selectedAgentId);
+    if (!selected || !hasPosition(selected)) return;
+    const key = selected.id;
+    if (addressRef.current.has(key)) return;
+    const controller = new AbortController();
+    void fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&lat=${encodeURIComponent(selected.coordinates.lat)}&lon=${encodeURIComponent(selected.coordinates.lng)}`,
+      { signal: controller.signal },
+    )
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result: { address?: Record<string, string>; display_name?: string } | null) => {
+        if (!result) return;
+        const address = result.address ?? {};
+        const label = [
+          address.road,
+          address.neighbourhood || address.suburb,
+          address.city || address.town || address.village,
+        ].filter(Boolean).join(', ') || result.display_name;
+        if (!label) return;
+        addressRef.current.set(key, label);
+        const marker = markersRef.current.get(selected.id);
+        if (marker && selected.id === selectedAgentId) {
+          marker.bindPopup(createAgentPopup(selected, undefined, label), { maxWidth: 320 });
+        }
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
   }, [agents, selectedAgentId]);
 
   const hasAnyPosition = agents.some(hasPosition);
