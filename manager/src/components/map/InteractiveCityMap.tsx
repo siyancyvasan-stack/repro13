@@ -147,6 +147,7 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
   const accuracyCirclesRef = useRef(new Map<string, google.maps.Circle>());
   const routePolylinesRef = useRef<google.maps.Polyline[]>([]);
   const travelledPolylineRef = useRef<google.maps.Polyline>();
+  const teamTravelledPolylinesRef = useRef(new Map<string, google.maps.Polyline>());
   const shopMarkersRef = useRef<MapMarker[]>([]);
   const geofenceCirclesRef = useRef<google.maps.Circle[]>([]);
   const lastRouteRef = useRef<{ origin: google.maps.LatLngLiteral; destinationKey: string; requestedAt: number }>();
@@ -193,6 +194,8 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
     routePolylinesRef.current = [];
     travelledPolylineRef.current?.setMap(null);
     travelledPolylineRef.current = undefined;
+    teamTravelledPolylinesRef.current.forEach((line) => line.setMap(null));
+    teamTravelledPolylinesRef.current.clear();
     shopMarkersRef.current.forEach(detachMarker);
     shopMarkersRef.current = [];
     travelledPolylineRef.current?.setMap(null);
@@ -364,6 +367,26 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
             );
           }
         }
+      });
+
+      const routeIds = new Set<string>();
+      filteredAgents.filter(isValidPosition).forEach((agent) => {
+        const path = (agent.travelledPath?.length ? agent.travelledPath : agent.routeCoordinates)
+          .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng));
+        if (path.length < 2) return;
+        routeIds.add(agent.id);
+        const color = agent.trackingStatus === 'online' ? '#2563eb' : agent.trackingStatus === 'gps_delayed' ? '#f59e0b' : '#64748b';
+        let line = teamTravelledPolylinesRef.current.get(agent.id);
+        if (!line) {
+          line = new google.maps.Polyline({ map: mapRef.current, path, strokeColor: color, strokeOpacity: agent.id === selectedAgent?.id ? 0.95 : 0.7, strokeWeight: agent.id === selectedAgent?.id ? 6 : 4, zIndex: 12 });
+          teamTravelledPolylinesRef.current.set(agent.id, line);
+        } else {
+          line.setPath(path);
+          line.setOptions({ strokeColor: color, strokeOpacity: agent.id === selectedAgent?.id ? 0.95 : 0.7, strokeWeight: agent.id === selectedAgent?.id ? 6 : 4 });
+        }
+      });
+      teamTravelledPolylinesRef.current.forEach((line, agentId) => {
+        if (!routeIds.has(agentId)) { line.setMap(null); teamTravelledPolylinesRef.current.delete(agentId); }
       });
 
       if (!didFitRef.current && filteredAgents.some(isValidPosition)) {

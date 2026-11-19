@@ -91,6 +91,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
   const markerAnimationsRef = useRef(new Map<string, number>());
   const plannedRouteRef = useRef<L.Polyline>();
   const travelledRouteRef = useRef<L.Polyline>();
+  const allTravelledRoutesRef = useRef(new Map<string, L.Polyline>());
   const visitedStopMarkersRef = useRef<L.Marker[]>([]);
   const destinationMarkerRef = useRef<L.Marker>();
   const routeRequestRef = useRef<AbortController>();
@@ -135,6 +136,8 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
       markerPositionsRef.current.clear();
       plannedRouteRef.current = undefined;
       travelledRouteRef.current = undefined;
+      allTravelledRoutesRef.current.forEach((line) => line.remove());
+      allTravelledRoutesRef.current.clear();
       visitedStopMarkersRef.current = [];
       destinationMarkerRef.current = undefined;
       fittedRef.current = false;
@@ -232,6 +235,31 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
         `${agent.name} · ${agent.trackingStatusLabel ?? 'Off Shift'} · ${agent.speedKmH} km/h`,
         { direction: 'top', offset: [0, -18] },
       );
+    });
+
+    // Keep every agent's travelled GPS path visible on the team map. A live
+    // connected agent gets a solid blue line; stale/unavailable paths remain
+    // visible with a muted/dashed color so managers can still see last-known
+    // movement without confusing it for a live fix.
+    const routeIds = new Set<string>();
+    positionedAgents.forEach((agent) => {
+      const points = (agent.travelledPath?.length ? agent.travelledPath : agent.routeCoordinates)
+        .filter((point) => isValidPoint(point))
+        .map((point) => [point.lat, point.lng] as L.LatLngExpression);
+      if (points.length < 2) return;
+      routeIds.add(agent.id);
+      const color = agent.trackingStatus === 'online' ? '#2563eb' : agent.trackingStatus === 'gps_delayed' ? '#f59e0b' : '#64748b';
+      let line = allTravelledRoutesRef.current.get(agent.id);
+      if (!line) {
+        line = L.polyline(points, { color, weight: agent.id === selectedAgentId ? 6 : 4, opacity: agent.id === selectedAgentId ? 0.95 : 0.7, dashArray: agent.trackingStatus === 'online' ? undefined : '8 8', lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        allTravelledRoutesRef.current.set(agent.id, line);
+      } else {
+        line.setLatLngs(points);
+        line.setStyle({ color, weight: agent.id === selectedAgentId ? 6 : 4, opacity: agent.id === selectedAgentId ? 0.95 : 0.7, dashArray: agent.trackingStatus === 'online' ? undefined : '8 8' });
+      }
+    });
+    allTravelledRoutesRef.current.forEach((line, agentId) => {
+      if (!routeIds.has(agentId)) { line.remove(); allTravelledRoutesRef.current.delete(agentId); }
     });
 
     const positionedAgentKey = positionedAgents.map((agent) => agent.id).sort().join('|');
