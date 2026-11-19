@@ -214,7 +214,7 @@ factoryRouter.patch('/orders/:id/status', async (req, res) => {
 
 const productInput = z.object({
     name: z.string().min(2).max(150),
-    sku: z.string().min(2).max(60).transform((value) => value.trim().toUpperCase()),
+    sku: z.string().regex(/^\d{1,7}$/, 'Product ID must contain digits only (maximum 7 digits).'),
     category: z.string().min(2).max(80),
     description: z.string().max(2000).optional(),
     imageUrl: z.string().url().optional().or(z.literal('')),
@@ -472,7 +472,7 @@ factoryRouter.post('/inventory/adjust', async (req, res) => {
     return res.status(201).json(result);
 });
 
-const materialInput = z.object({ name: z.string().min(2), sku: z.string().min(2).transform((value) => value.toUpperCase()), currentQuantity: z.coerce.number().nonnegative(), minimumStock: z.coerce.number().nonnegative(), unitType: z.string().min(1), supplier: z.string().optional(), active: z.boolean().default(true) });
+const materialInput = z.object({ name: z.string().min(2), sku: z.string().regex(/^\d{1,7}$/, 'Product ID must contain digits only (maximum 7 digits).'), currentQuantity: z.coerce.number().nonnegative(), minimumStock: z.coerce.number().nonnegative(), unitType: z.string().min(1), supplier: z.string().optional(), active: z.boolean().default(true) });
 
 factoryRouter.post('/raw-materials', async (req, res) => {
     const input = materialInput.parse(req.body);

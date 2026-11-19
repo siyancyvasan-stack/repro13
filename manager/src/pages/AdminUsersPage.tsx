@@ -16,7 +16,7 @@ const UserForm = ({ role, user, onSaved }: { role: UserRole; user?: AdminUser; o
   const set = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!/^\d{7,10}$/.test(form.employeeCode)) return showToast('Invalid Employee ID', 'Use 7 to 10 digits.', 'error');
+    if (!/^\d{1,7}$/.test(form.employeeCode)) return showToast('Invalid Agent ID', 'Use digits only, maximum 7 digits.', 'error');
     if (!user && form.password.length < 8) return showToast('Password required', 'Use at least 8 characters.', 'error');
     setSaving(true);
     try {
@@ -32,7 +32,7 @@ const UserForm = ({ role, user, onSaved }: { role: UserRole; user?: AdminUser; o
   return <form onSubmit={submit} className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 text-white md:grid-cols-2">
     <label className="grid gap-1 text-sm font-bold">Full name<input required value={form.name} onChange={(e) => set('name', e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>
     <label className="grid gap-1 text-sm font-bold">Email<input required type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>
-    <label className="grid gap-1 text-sm font-bold">Employee ID (7–10 digits)<input required inputMode="numeric" pattern="[0-9]{7,10}" value={form.employeeCode} onChange={(e) => set('employeeCode', e.target.value.replace(/\D/g, '').slice(0, 10))} className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>
+    <label className="grid gap-1 text-sm font-bold">Agent ID (max 7 digits)<input required inputMode="numeric" pattern="[0-9]{1,7}" value={form.employeeCode} onChange={(e) => set('employeeCode', e.target.value.replace(/\D/g, '').slice(0, 7))} className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>
     <label className="grid gap-1 text-sm font-bold">Phone<input value={form.phone} onChange={(e) => set('phone', e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>
     <label className="grid gap-1 text-sm font-bold md:col-span-2">Avatar image URL<input type="url" value={form.avatarUrl} onChange={(e) => set('avatarUrl', e.target.value)} placeholder="https://..." className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>
     <label className="grid gap-1 text-sm font-bold md:col-span-2">{user ? 'New password (optional)' : 'Password'}<input required={!user} type="password" minLength={8} value={form.password} onChange={(e) => set('password', e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 p-3" /></label>

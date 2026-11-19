@@ -241,7 +241,7 @@ shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), async (req
             [req.auth.tenantId, '^[0-9]+$'],
         );
         const nextShopNumber = Number(latestCodes[0]?.retailerCode || 0) + 1;
-        shopData.retailerCode = String(nextShopNumber).padStart(10, '0');
+        shopData.retailerCode = String(nextShopNumber).padStart(7, '0').slice(-7);
         const values = keys.map(k => shopData[k]);
         await connection.query(`INSERT INTO Shop (${keys.join(',')}) VALUES (${placeholders})`, values);
         const [createdShops] = await connection.query('SELECT * FROM Shop WHERE id = ?', [shopId]);
@@ -417,7 +417,7 @@ shopRouter.post('/:id/images', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), 
             'SELECT retailerCode FROM Shop WHERE tenantId = ? AND retailerCode REGEXP ? ORDER BY CAST(retailerCode AS UNSIGNED) DESC LIMIT 1',
             [req.auth.tenantId, '^[0-9]+$'],
         );
-        retailerCode = String(Number(latest[0]?.retailerCode || 0) + 1).padStart(10, '0').slice(-10);
+            retailerCode = String(Number(latest[0]?.retailerCode || 0) + 1).padStart(7, '0').slice(-7);
         await db.query('UPDATE Shop SET retailerCode = ? WHERE id = ? AND tenantId = ?', [retailerCode, shopId, req.auth.tenantId]);
     }
     
@@ -661,7 +661,7 @@ shopRouter.patch('/:id/review', authorize(Role.ADMIN, Role.MANAGER), async (req,
             const next = Number(latest[0]?.retailerCode?.split('-').pop() || 0) + 1;
             // Retailer IDs are intentionally numeric and exactly ten digits so
             // they can be printed/scanned consistently across sales and manager apps.
-            retailerCode = String(next).padStart(10, '0').slice(-10);
+            retailerCode = String(next).padStart(7, '0').slice(-7);
         } 
         const status = input.action === 'APPROVE' ? RetailerStatus.APPROVED : input.action === 'REJECT' ? RetailerStatus.REJECTED : input.action === 'REQUEST_CHANGES' ? RetailerStatus.DRAFT : input.action === 'SUSPEND' ? RetailerStatus.SUSPENDED : input.action === 'DEACTIVATE' ? RetailerStatus.INACTIVE : RetailerStatus.APPROVED; 
         

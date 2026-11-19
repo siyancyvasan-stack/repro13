@@ -290,7 +290,7 @@ export const ShopCreatePage: React.FC = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Shop ID (10 digits)">
+              <Field label="Shop ID (maximum 7 digits)">
                 <input
                   type="text"
                   value={generatedShopId || "Generated after registration"}

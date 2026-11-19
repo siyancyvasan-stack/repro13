@@ -52,7 +52,7 @@ fuelRouter.get('/vehicles', authorize(Role.AGENT, Role.MANAGER, Role.ADMIN), asy
 
 fuelRouter.post('/vehicles', authorize(Role.MANAGER, Role.ADMIN), async (req, res) => {
     const input = z.object({
-        vehicleNumber: z.string().min(2), vehicleType: z.string().min(2), fuelType: z.nativeEnum(FuelType),
+        vehicleNumber: z.string().regex(/^\d{1,7}$/, 'Vehicle ID must contain digits only (maximum 7 digits).'), vehicleType: z.string().min(2), fuelType: z.nativeEnum(FuelType),
         tankCapacity: z.coerce.number().positive(), expectedKmL: z.coerce.number().positive(),
         minimumKmL: z.coerce.number().positive(), maximumKmL: z.coerce.number().positive(),
         currentOdometer: z.coerce.number().nonnegative(), assignedToId: z.string().optional(),

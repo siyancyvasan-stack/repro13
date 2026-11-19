@@ -65,7 +65,7 @@ agentRouter.post('/', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
         name: z.string().min(2),
         email: z.string().email(),
         password: z.string().min(8).optional(),
-        employeeCode: z.string().min(2).optional(),
+        employeeCode: z.string().regex(/^\d{1,7}$/, 'Agent ID must contain digits only (maximum 7 digits).').optional(),
         phone: z.string().optional(),
         routeAssigned: z.string().optional(),
         vehicleNo: z.string().optional(),
@@ -147,7 +147,7 @@ agentRouter.post('/', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
 
 agentRouter.patch('/:id', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
     const input = z.object({
-        name: z.string().min(2), email: z.string().email(), employeeCode: z.string().min(2),
+        name: z.string().min(2), email: z.string().email(), employeeCode: z.string().regex(/^\d{1,7}$/, 'Agent ID must contain digits only (maximum 7 digits).'),
         phone: z.string().optional(), routeAssigned: z.string().optional(), vehicleNo: z.string().optional(),
         password: z.string().min(8).optional(),
     }).parse(req.body);

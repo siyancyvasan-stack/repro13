@@ -9,7 +9,7 @@ import db from '../../lib/db.js';
 export const adminUserRouter = Router();
 adminUserRouter.use(authenticate, authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER));
 
-const employeeCode = z.string().regex(/^\d{7,10}$/, 'Employee ID must contain 7 to 10 digits.');
+const employeeCode = z.string().regex(/^\d{1,7}$/, 'Agent ID must contain digits only (maximum 7 digits).');
 const role = z.enum([Role.AGENT, Role.FACTORY_MANAGER]);
 const userInput = z.object({
   name: z.string().trim().min(2).max(100),

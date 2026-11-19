@@ -410,7 +410,7 @@ export const ManagerProductsPage: React.FC = () => {
                 minLength={2}
                 value={productForm.sku}
                 onChange={(e) =>
-                  setProductForm({ ...productForm, sku: e.target.value })
+                      setProductForm({ ...productForm, sku: e.target.value.replace(/\D/g, '').slice(0, 7) })
                 }
                 placeholder="e.g. TEA-100"
                 className={fieldClass}

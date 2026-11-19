@@ -12,7 +12,7 @@ productRouter.use(authenticate);
 
 const productInput = z.object({
     name: z.string().min(2),
-    sku: z.string().min(2),
+    sku: z.string().regex(/^\d{1,7}$/, 'Product ID must contain digits only (maximum 7 digits).'),
     category: z.string().min(2),
     pricePerCaseLkr: z.coerce.number().nonnegative(),
     unitsPerCase: z.coerce.number().int().positive(),
