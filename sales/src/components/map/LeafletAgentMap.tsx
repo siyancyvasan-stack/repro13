@@ -246,7 +246,8 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
     if (!map.getCenter().equals(selectedPosition, 8) || map.getZoom() < 15) {
       map.setView(selectedPosition, Math.max(map.getZoom(), 15), { animate: false });
     }
-    markersRef.current.get(selected.id)?.openPopup();
+    // Keep the map clean after selecting an agent from the directory. The
+    // detail popup is opened only by an explicit click on the map marker.
 
     const travelledPath = (selected.travelledPath?.length ? selected.travelledPath : selected.routeCoordinates).filter(isValidPoint);
     if (travelledPath.length > 1) {
