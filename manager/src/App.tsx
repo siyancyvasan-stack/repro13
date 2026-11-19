@@ -73,9 +73,9 @@ export default function App() {
                   element={<ProtectedRoute allowedRole="admin"><ManagerDashboardPage /></ProtectedRoute>}
                 />
                 <Route path="/admin/contacts" element={<ProtectedRoute allowedRole="admin"><AdminContactManagementPage /></ProtectedRoute>} />
-                <Route path="/admin/factory-users" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="FACTORY_MANAGER" /></ProtectedRoute>} />
-                <Route path="/admin/factory-users/:mode" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="FACTORY_MANAGER" /></ProtectedRoute>} />
-                <Route path="/admin/factory-users/:mode/:id" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="FACTORY_MANAGER" /></ProtectedRoute>} />
+                <Route path="/admin/factory-users" element={managerRoute(<AdminUsersPage role="FACTORY_MANAGER" />)} />
+                <Route path="/admin/factory-users/:mode" element={managerRoute(<AdminUsersPage role="FACTORY_MANAGER" />)} />
+                <Route path="/admin/factory-users/:mode/:id" element={managerRoute(<AdminUsersPage role="FACTORY_MANAGER" />)} />
                 <Route path="/admin/sales-users" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="AGENT" /></ProtectedRoute>} />
                 <Route path="/admin/sales-users/:mode" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="AGENT" /></ProtectedRoute>} />
                 <Route path="/admin/sales-users/:mode/:id" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="AGENT" /></ProtectedRoute>} />

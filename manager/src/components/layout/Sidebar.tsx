@@ -64,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Contact Administration', icon: MessageCircle, path: '/admin/contacts' },
   ] : [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Factory Managers', icon: Users, path: '/admin/factory-users' },
     ...managerItems,
   ];
 
