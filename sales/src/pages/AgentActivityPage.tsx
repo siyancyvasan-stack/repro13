@@ -248,6 +248,9 @@ export const AgentActivityPage: React.FC = () => {
   useEffect(() => {
     if (!agentId) return;
     let socket: ReturnType<typeof io> | undefined, timer: number | undefined;
+    const pollingTimer = !manager && from === to
+      ? window.setInterval(() => void load(true), 5_000)
+      : undefined;
     const refresh = () => {
       clearTimeout(timer);
       timer = window.setTimeout(() => void load(true), 500);
@@ -274,9 +277,10 @@ export const AgentActivityPage: React.FC = () => {
       .catch(() => undefined);
     return () => {
       clearTimeout(timer);
+      if (pollingTimer !== undefined) window.clearInterval(pollingTimer);
       socket?.disconnect();
     };
-  }, [agentId, load]);
+  }, [agentId, load, manager, from, to]);
   const refreshSync = useCallback(async () => {
     if (!agentId) return;
     const [gps, queued] = await Promise.all([
