@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Agent, AgentStatus, Geofence, LocationPermission, RoutePoint } from '../types';
 import { io } from 'socket.io-client';
-import { apiRequest, ensureAccessToken, getAccessToken, refreshSessionAccessToken } from '../services/apiClient';
+import { apiRequest, ensureAccessToken, getAccessToken, isBackendConfigured, refreshSessionAccessToken } from '../services/apiClient';
 import { withDerivedTrackingStatus } from '../services/trackingStatus';
 
 type TelemetryMessage = {
@@ -73,10 +73,12 @@ export const useLiveAgentTracking = (initialAgents: Agent[]) => {
   const socketUrl = (import.meta.env.VITE_TRACKING_WS_URL as string | undefined)?.trim();
   const configuredSocketIoUrl =
     (import.meta.env.VITE_TRACKING_SOCKET_URL as string | undefined)?.trim();
+  const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   const socketIoUrl =
-    configuredSocketIoUrl === 'same-origin' ? undefined : configuredSocketIoUrl;
+    configuredSocketIoUrl === 'same-origin' ? undefined : configuredSocketIoUrl || configuredApiUrl || undefined;
+  const trackingEnabled = isBackendConfigured && Boolean(configuredSocketIoUrl || configuredApiUrl || socketUrl || typeof window !== 'undefined');
   const [connectionState, setConnectionState] = useState<TrackingConnectionState>(
-    socketUrl || configuredSocketIoUrl ? 'connecting' : 'demo',
+    trackingEnabled ? 'connecting' : 'demo',
   );
   const reconnectAttempt = useRef(0);
 
@@ -101,26 +103,26 @@ export const useLiveAgentTracking = (initialAgents: Agent[]) => {
   }, [initialAgents]);
 
   useEffect(() => {
-    if (!configuredSocketIoUrl) return;
+    if (!trackingEnabled) return;
     void apiRequest<{ agents: TelemetryMessage[] }>('/api/v1/tracking/latest')
       .then((payload) => {
         setAgents((current) => mergeTelemetry(current, payload.agents, new Date().toISOString()));
       })
       .catch(() => undefined);
-  }, [configuredSocketIoUrl]);
+  }, [configuredSocketIoUrl, configuredApiUrl, trackingEnabled]);
 
   useEffect(() => {
-    if (!configuredSocketIoUrl) return;
+    if (!trackingEnabled) return;
     const timer = window.setInterval(() => {
       void apiRequest<{ agents: TelemetryMessage[] }>('/api/v1/tracking/latest')
         .then((payload) => setAgents((current) => mergeTelemetry(current, payload.agents, new Date().toISOString())))
         .catch(() => undefined);
     }, 2_000);
     return () => window.clearInterval(timer);
-  }, [configuredSocketIoUrl]);
+  }, [configuredSocketIoUrl, configuredApiUrl, trackingEnabled]);
 
   useEffect(() => {
-    if (!configuredSocketIoUrl) return;
+    if (!trackingEnabled) return;
     let disposed = false;
     let socket: ReturnType<typeof io> | undefined;
     let refreshingSocketToken = false;
@@ -209,7 +211,7 @@ export const useLiveAgentTracking = (initialAgents: Agent[]) => {
       document.removeEventListener('visibilitychange', recoverConnection);
       socket?.disconnect();
     };
-  }, [configuredSocketIoUrl, socketIoUrl]);
+  }, [configuredSocketIoUrl, configuredApiUrl, socketIoUrl, trackingEnabled]);
 
   useEffect(() => {
     if (configuredSocketIoUrl) return;
