@@ -168,7 +168,7 @@ shopRouter.get('/', async (req, res) => {
     res.json({ items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
 });
 
-shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), async (req, res) => {
+shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER, Role.AGENT), async (req, res) => {
     const input = shopInput.parse(req.body);
     
     let dupQuery = 'SELECT id, name, nicNumber, brNumber, phone FROM Shop WHERE tenantId = ? AND (';
@@ -333,7 +333,7 @@ shopRouter.get('/retailer-analytics', authorize(Role.ADMIN, Role.MANAGER), async
     res.json({ total, active, pending, newThisMonth, visitedToday, notVisited: total - visitedToday, withOrders, withoutOrders: total - withOrders });
 });
 
-shopRouter.post('/:id/documents', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), upload.single('document'), async (req, res) => {
+shopRouter.post('/:id/documents', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER, Role.AGENT), upload.single('document'), async (req, res) => {
     if (!req.file) {
         res.status(422).json({ error: { code: 'DOCUMENT_REQUIRED' } });
         return;
@@ -396,7 +396,7 @@ shopRouter.post('/:id/documents', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT
     res.status(201).json(row);
 });
 
-shopRouter.post('/:id/images', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), imageUpload.single('image'), async (req, res) => {
+shopRouter.post('/:id/images', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER, Role.AGENT), imageUpload.single('image'), async (req, res) => {
     if (!req.file)
         return res.status(422).json({ error: { code: 'IMAGE_REQUIRED', message: 'Choose an image to upload' } });
     const shopId = String(req.params.id);
@@ -1093,7 +1093,7 @@ shopRouter.get("/:id", async (req, res) => {
     res.json(shop);
 });
 
-shopRouter.patch('/:id', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
+shopRouter.patch('/:id', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER), async (req, res) => {
     const input = shopInput.partial().parse(req.body);
     
     const updateFields = [];

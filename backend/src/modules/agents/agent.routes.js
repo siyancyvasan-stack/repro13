@@ -546,7 +546,7 @@ agentRouter.delete('/:id/avatar', async (req, res) => {
     return res.status(204).send();
 });
 
-agentRouter.patch('/:id/destination', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
+agentRouter.patch('/:id/destination', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER), async (req, res) => {
     const agentId = String(req.params.id);
     const destination = z.object({
         name: z.string().trim().min(1).max(160),
