@@ -215,7 +215,8 @@ shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), async (req
     const brVerificationStatus = input.brNumber ? RetailerDocumentStatus.PENDING : (RetailerDocumentStatus.NOT_PROVIDED || 'NOT_PROVIDED');
     
     const shopData = {
-        id: shopId, tenantId: req.auth.tenantId, assignedSalespersonId: assignedSalespersonId ?? null, status, active: input.active, brVerificationStatus,
+        id: shopId, tenantId: req.auth.tenantId, assignedSalespersonId: assignedSalespersonId ?? null, status,
+        active: req.auth.role === Role.AGENT ? false : input.active, brVerificationStatus,
         name: input.name, ownerName: input.ownerName, phone: input.phone, alternateMobile: input.alternateMobile ?? null, email: input.email ?? null,
         address: input.address, city: input.city, latitude: input.latitude ?? null, longitude: input.longitude ?? null, allowedVisitRadiusMeters: input.allowedVisitRadiusMeters ?? null,
         routeGroup: input.routeGroup ?? null, outstandingBalanceLkr: input.outstandingBalanceLkr, preferredProducts: JSON.stringify(input.preferredProducts), requiredProducts: JSON.stringify(input.requiredProducts),
@@ -224,7 +225,8 @@ shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.AGENT), async (req
         country: input.country, territory: input.territory ?? null, shopCategory: input.shopCategory ?? null, retailerType: input.retailerType ?? null,
         gpsAccuracy: input.gpsAccuracy ?? null, gpsCapturedAt: input.gpsCapturedAt ? new Date(input.gpsCapturedAt) : null, productCategories: JSON.stringify(input.productCategories),
         expectedMonthlyPurchase: input.expectedMonthlyPurchase, currentSupplier: input.currentSupplier ?? null, deliveryPreference: input.deliveryPreference ?? null, preferredVisitDays: JSON.stringify(input.preferredVisitDays),
-        shopRequirements: input.shopRequirements ?? null, salesNotes: input.salesNotes ?? null, retailerCode: null, createdAt: new Date(), updatedAt: new Date()
+        shopRequirements: input.shopRequirements ?? null, salesNotes: input.salesNotes ?? null, retailerCode: null,
+        submittedAt: req.auth.role === Role.AGENT ? new Date() : null, createdAt: new Date(), updatedAt: new Date()
     };
     
     const keys = Object.keys(shopData);

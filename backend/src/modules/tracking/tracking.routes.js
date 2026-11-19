@@ -42,6 +42,13 @@ trackingRouter.post('/heartbeat', authorize(Role.AGENT), async (req, res) => {
     
     const [profiles] = await db.query('SELECT * FROM AgentProfile WHERE userId = ?', [req.auth.sub]);
     const profile = profiles[0];
+
+    // A newly-created agent can send a heartbeat before the profile seed is
+    // available. Keep the heartbeat endpoint idempotent instead of throwing
+    // a 500 and flooding the browser console.
+    if (!profile) {
+        return res.json({ ok: true, serverReceivedAt: now.toISOString(), profileReady: false });
+    }
     
     const io = req.app.get('io');
     

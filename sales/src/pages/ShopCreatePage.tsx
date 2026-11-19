@@ -217,14 +217,16 @@ export const ShopCreatePage: React.FC = () => {
       );
       navigate("/sales/shops");
     } catch (e) {
+      const message =
+        e instanceof ApiError && e.code === "DUPLICATE_RETAILER"
+          ? "This shop is already registered. Check the mobile, NIC or BR number."
+          : e instanceof Error
+            ? e.message
+            : "Could not save the shop registration.";
       setErrors({
-        form:
-          e instanceof ApiError && e.code === "DUPLICATE_RETAILER"
-            ? "A retailer with this shop name, mobile, NIC or BR number already exists."
-            : e instanceof Error
-              ? e.message
-              : "Could not save the shop registration.",
+        form: message,
       });
+      showToast("Registration failed", message, "error");
     } finally {
       setSaving(false);
     }

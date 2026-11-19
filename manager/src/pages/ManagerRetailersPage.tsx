@@ -151,6 +151,20 @@ export const ManagerRetailersPage = ({
       setDeleting(false);
     }
   };
+  const review = async (retailer: Row, action: "APPROVE" | "REJECT") => {
+    const reason = action === "REJECT" ? window.prompt("Reason for rejecting this registration:") : undefined;
+    if (action === "REJECT" && !reason?.trim()) return;
+    try {
+      await apiRequest(`/api/v1/shops/${retailer.id}/review`, {
+        method: "PATCH",
+        body: JSON.stringify({ action, ...(reason ? { reason: reason.trim() } : {}) }),
+      });
+      showToast(action === "APPROVE" ? "Shop approved" : "Shop rejected", `${retailer.name} review status updated.`, action === "APPROVE" ? "success" : "info");
+      await load(page);
+    } catch (e) {
+      showToast("Review failed", e instanceof Error ? e.message : "Unable to update this shop.", "error");
+    }
+  };
   const closeAdd = () => {
     setAdding(false);
     if (view === "add") history.back();
@@ -320,6 +334,12 @@ export const ManagerRetailersPage = ({
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-1.5">
+                            {view === "pending" && r.status === "SUBMITTED" && (
+                              <>
+                                <button type="button" onClick={() => void review(r, "APPROVE")} className="rounded-lg bg-emerald-500 px-2 py-1 text-[10px] font-black text-white hover:bg-emerald-400">Approve</button>
+                                <button type="button" onClick={() => void review(r, "REJECT")} className="rounded-lg bg-rose-500/15 px-2 py-1 text-[10px] font-black text-rose-300 hover:bg-rose-500/25">Reject</button>
+                              </>
+                            )}
                             <button
                               type="button"
                               onClick={() =>
