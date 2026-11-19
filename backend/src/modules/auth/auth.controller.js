@@ -192,8 +192,8 @@ export const updateMe = async (req, res) => {
 export const createWebViewHandoff = async (req, res) => {
     const code = createRefreshToken();
     await db.query(
-        'INSERT INTO PasskeyChallenge (id, userId, challenge, purpose, expiresAt) VALUES (?, ?, ?, ?)',
-        [req.auth.sub, hashToken(code), 'WEBVIEW_HANDOFF', new Date(Date.now() + WEBVIEW_HANDOFF_TTL_MS)]
+        'INSERT INTO PasskeyChallenge (id, userId, challenge, purpose, expiresAt) VALUES (?, ?, ?, ?, ?)',
+        [randomUUID(), req.auth.sub, hashToken(code), 'WEBVIEW_HANDOFF', new Date(Date.now() + WEBVIEW_HANDOFF_TTL_MS)]
     );
     res.setHeader('Cache-Control', 'no-store');
     return res.status(201).json({ code, expiresInSeconds: WEBVIEW_HANDOFF_TTL_MS / 1000 });
