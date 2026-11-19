@@ -132,7 +132,9 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
   showSelectedDetails = true,
 }) => {
   const apiKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim();
-  const useGoogleMaps = false;
+  // Prefer the configured Google map for a live, WhatsApp-style satellite
+  // view with traffic; keep the existing Leaflet map as the safe fallback.
+  const useGoogleMaps = Boolean(apiKey && !configIssue);
   const mapId = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined)?.trim();
   const configIssue = getGoogleMapsConfigIssue(apiKey, mapId);
   const mapElementRef = useRef<HTMLDivElement>(null);
@@ -141,6 +143,7 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
   const markerPositionsRef = useRef(new Map<string, { lat: number; lng: number }>());
   const markerAnimationsRef = useRef(new Map<string, number>());
   const infoWindowRef = useRef<google.maps.InfoWindow>();
+  const trafficLayerRef = useRef<google.maps.TrafficLayer>();
   const accuracyCirclesRef = useRef(new Map<string, google.maps.Circle>());
   const routePolylinesRef = useRef<google.maps.Polyline[]>([]);
   const travelledPolylineRef = useRef<google.maps.Polyline>();
@@ -198,6 +201,8 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
     geofenceCirclesRef.current = [];
     infoWindowRef.current?.close();
     infoWindowRef.current = undefined;
+    trafficLayerRef.current?.setMap(null);
+    trafficLayerRef.current = undefined;
     mapRef.current = undefined;
     didFitRef.current = false;
   };
@@ -215,6 +220,7 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
           center: firstPosition,
           zoom: agentsRef.current.some(isValidPosition) ? 12 : 7,
           mapId,
+          mapTypeId: 'hybrid',
           backgroundColor: '#07111f',
           disableDefaultUI: true,
           zoomControl: true,
@@ -223,6 +229,8 @@ export const InteractiveCityMap: React.FC<InteractiveCityMapProps> = ({
           gestureHandling: 'cooperative',
           keyboardShortcuts: true,
         });
+        trafficLayerRef.current = new maps.TrafficLayer();
+        trafficLayerRef.current.setMap(mapRef.current);
         infoWindowRef.current = new maps.InfoWindow();
         setMapStatus('ready');
       })
