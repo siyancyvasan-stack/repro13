@@ -44,8 +44,10 @@ adminUserRouter.get('/:id', async (req, res) => {
 });
 
 adminUserRouter.post('/', async (req, res) => {
-  if (req.auth.role !== Role.ADMIN) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Only administrators can create users.' } });
   const input = userInput.extend({ password: z.string().min(8).max(128) }).parse(req.body);
+  if (req.auth.role !== Role.ADMIN && !(req.auth.role === Role.MANAGER && input.role === Role.FACTORY_MANAGER)) {
+    return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Managers can create Factory Manager accounts only.' } });
+  }
   const [existing] = await db.query(
     'SELECT id FROM User WHERE tenantId = ? AND (email = ? OR employeeCode = ?) LIMIT 1',
     [req.auth.tenantId, input.email, input.employeeCode],
