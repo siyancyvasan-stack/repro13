@@ -18,6 +18,7 @@ const AgentDashboardPage = lazy(() => import('./pages/AgentDashboardPage').then(
 const AgentNewOrderPage = lazy(() => import('./pages/AgentNewOrderPage').then((module) => ({ default: module.AgentNewOrderPage })));
 const AgentShopsPage = lazy(() => import('./pages/AgentShopsPage').then((module) => ({ default: module.AgentShopsPage })));
 const AgentProfilePage = lazy(() => import('./pages/AgentProfilePage').then((module) => ({ default: module.AgentProfilePage })));
+const SalesProfileSettingsPage = lazy(() => import('./pages/SalesProfileSettingsPage').then((module) => ({ default: module.SalesProfileSettingsPage })));
 const AgentFuelPage = lazy(() => import('./pages/AgentFuelPage').then((module) => ({ default: module.AgentFuelPage })));
 const OperationsChatPage = lazy(() => import('./pages/OperationsChatPage').then((module) => ({ default: module.OperationsChatPage })));
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then((module) => ({ default: module.SafetyPage })));
@@ -65,6 +66,7 @@ export default function App() {
                 <Route path="/sales/shops/view/:shopid" element={agentRoute(<ShopIdRoute page={<ShopViewPage />} />)} />
                 <Route path="/sales/retailers/add" element={agentRoute(<ManagerRetailersPage view="add" portal="agent" />)} />
                 <Route path="/sales/profile" element={agentRoute(<AgentProfilePage />)} />
+                <Route path="/sales/profile/settings" element={agentRoute(<SalesProfileSettingsPage />)} />
                 <Route path="/sales/activity" element={agentRoute(<AgentActivityPage />)} />
                 <Route path="/sales/visits/new" element={agentRoute(<SalesVisitEntryPage />)} />
                 <Route path="/sales/fuel" element={agentRoute(<AgentFuelPage />)} />

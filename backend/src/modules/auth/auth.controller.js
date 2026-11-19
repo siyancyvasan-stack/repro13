@@ -7,6 +7,7 @@ import db from '../../lib/db.js';
 import { hashPassword } from '../../lib/password.js';
 import { sendPasswordReset } from '../../lib/email.js';
 import { randomUUID } from 'node:crypto';
+import { z } from 'zod';
 const WEBVIEW_HANDOFF_TTL_MS = 60_000;
 const cookieOptions = {
     httpOnly: true,
@@ -162,6 +163,31 @@ export const me = async (req, res) => {
         void touchDeviceSession(req.auth.sub, req.auth.tenantId, req.headers['x-app-version']);
     }
     return res.json({ user });
+};
+
+export const updateMe = async (req, res) => {
+    const input = z.object({
+        name: z.string().trim().min(2).max(100).optional(),
+        email: z.string().email().transform((value) => value.toLowerCase()).optional(),
+        avatarUrl: z.string().url().max(500).optional().or(z.literal('')),
+        password: z.string().min(8).max(128).optional(),
+    }).strict().parse(req.body);
+    if (!Object.keys(input).length) return res.status(400).json({ error: { code: 'NO_CHANGES', message: 'No profile changes supplied.' } });
+    if (input.email) {
+        const [conflicts] = await db.query('SELECT id FROM User WHERE tenantId = ? AND email = ? AND id <> ? LIMIT 1', [req.auth.tenantId, input.email, req.auth.sub]);
+        if (conflicts.length) return res.status(409).json({ error: { code: 'EMAIL_ALREADY_EXISTS', message: 'This email is already in use.' } });
+    }
+    const fields = [];
+    const values = [];
+    for (const key of ['name', 'email', 'avatarUrl']) {
+        if (input[key] !== undefined) { fields.push(`${key} = ?`); values.push(input[key] || null); }
+    }
+    if (input.password) { fields.push('passwordHash = ?'); values.push(await hashPassword(input.password)); }
+    fields.push('updatedAt = NOW()');
+    values.push(req.auth.sub, req.auth.tenantId);
+    await db.query(`UPDATE User SET ${fields.join(', ')} WHERE id = ? AND tenantId = ?`, values);
+    const [users] = await db.query('SELECT id, email, name, role, avatarUrl, employeeCode, phone, region, tenantId FROM User WHERE id = ? AND tenantId = ?', [req.auth.sub, req.auth.tenantId]);
+    return res.json({ user: users[0] });
 };
 export const createWebViewHandoff = async (req, res) => {
     const code = createRefreshToken();

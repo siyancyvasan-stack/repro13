@@ -25,6 +25,7 @@ import { contactRouter } from '../modules/contacts/contact.routes.js';
 import { exportRouter } from '../modules/exports/export.routes.js';
 import { broadcastRouter } from '../modules/broadcast/broadcast.routes.js';
 import { fieldIntelligenceRouter } from '../modules/field-intelligence/field-intelligence.routes.js';
+import { adminUserRouter } from '../modules/admin/admin-user.routes.js';
 import { env } from '../config/env.js';
 
 export const apiRouter = Router();
@@ -49,6 +50,7 @@ apiRouter.get('/config/app-version', (req, res) => {
 });
 
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/admin/users', adminUserRouter);
 apiRouter.use('/agents', agentRouter);
 apiRouter.use('/products', productRouter);
 apiRouter.use('/shops', shopRouter);

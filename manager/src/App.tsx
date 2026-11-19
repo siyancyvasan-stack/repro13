@@ -25,6 +25,7 @@ const OperationsChatPage = lazy(() => import('./pages/OperationsChatPage').then(
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then((module) => ({ default: module.SafetyPage })));
 const ManagerContactsPage = lazy(() => import('./pages/ContactsPage').then((module) => ({ default: module.ManagerContactsPage })));
 const AdminContactManagementPage = lazy(() => import('./pages/AdminContactManagementPage').then((module) => ({ default: module.AdminContactManagementPage })));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage').then((module) => ({ default: module.AdminUsersPage })));
 
 const LoadingPortal = () => (
   <div className="min-h-[100dvh] grid place-items-center bg-slate-950 text-sm font-semibold text-cyan-300">
@@ -72,6 +73,12 @@ export default function App() {
                   element={<ProtectedRoute allowedRole="admin"><ManagerDashboardPage /></ProtectedRoute>}
                 />
                 <Route path="/admin/contacts" element={<ProtectedRoute allowedRole="admin"><AdminContactManagementPage /></ProtectedRoute>} />
+                <Route path="/admin/factory-users" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="FACTORY_MANAGER" /></ProtectedRoute>} />
+                <Route path="/admin/factory-users/:mode" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="FACTORY_MANAGER" /></ProtectedRoute>} />
+                <Route path="/admin/factory-users/:mode/:id" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="FACTORY_MANAGER" /></ProtectedRoute>} />
+                <Route path="/admin/sales-users" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="AGENT" /></ProtectedRoute>} />
+                <Route path="/admin/sales-users/:mode" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="AGENT" /></ProtectedRoute>} />
+                <Route path="/admin/sales-users/:mode/:id" element={<ProtectedRoute allowedRole="admin"><AdminUsersPage role="AGENT" /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>

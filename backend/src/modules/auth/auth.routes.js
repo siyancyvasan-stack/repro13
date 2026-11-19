@@ -44,6 +44,7 @@ authRouter.post(['/register/request-otp', '/register/verify-otp'], (_req, res) =
 authRouter.post('/refresh', refreshLimiter, validate(refreshSchema), controller.refresh);
 authRouter.post('/logout', validate(refreshSchema), controller.logout);
 authRouter.get('/me', authenticate, controller.me);
+authRouter.patch('/me', authenticate, controller.updateMe);
 authRouter.post('/webview-handoff', handoffLimiter, authenticate, controller.createWebViewHandoff);
 authRouter.post('/webview-handoff/exchange', handoffLimiter, controller.exchangeWebViewHandoff);
 authRouter.use('/passkey', passkeyRouter);
