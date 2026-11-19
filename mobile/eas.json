@@ -2,7 +2,15 @@
   "cli": { "version": ">= 15.0.0", "appVersionSource": "remote" },
   "build": {
     "development": { "developmentClient": true, "distribution": "internal" },
-    "preview": { "distribution": "internal", "android": { "buildType": "apk" } },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.reproutes.com",
+        "EXPO_PUBLIC_WEB_URL": "https://reproutes.com",
+        "EXPO_PUBLIC_TENANT_SLUG": "reproutes"
+      },
+      "android": { "buildType": "apk" }
+    },
     "production-apk": {
       "distribution": "internal",
       "environment": "production",

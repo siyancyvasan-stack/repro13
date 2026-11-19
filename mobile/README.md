@@ -10,9 +10,10 @@ Background tracking requires a development or release build (`npm run android`, 
 
 ## Run locally
 
-1. Copy `.env.example` to `.env` and set its single `EXPO_PUBLIC_API_URL` value
-   to the backend origin reachable from the device. The app has no runtime URL
-   fallback and stops with a configuration error when this value is missing.
+1. Copy `.env.example` to `.env` and set `EXPO_PUBLIC_API_URL` to the backend
+   origin reachable from the device. Preview and production APK profiles are
+   already configured to use `https://api.reproutes.com`; they must not be built
+   with a localhost URL.
 2. Run `npm install` in this directory.
 3. Run `npm run android` or `npm run ios`. Expo Go is not the supported runtime because push and location use native configuration.
 
