@@ -248,6 +248,14 @@ shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER, R
         shop = createdShops[0];
         await auditRetailer(req.auth.tenantId, req.auth.sub, 'RETAILER_CREATED', shop.id, { role: req.auth.role }, connection);
         await notifySalesVisibility(req, 'NEW_RETAILER', 'New retailer added', `${shop.name} was added to the sales network.`, 'sales:new-retailer', shop, connection, false);
+        // Keep the registering salesperson's notification history in the DB as
+        // well; management already receives the visibility notification above.
+        if (req.auth.role === Role.AGENT) {
+            await connection.query(
+                'INSERT INTO Notification (id, tenantId, userId, type, title, message) VALUES (UUID(), ?, ?, ?, ?, ?)',
+                [req.auth.tenantId, req.auth.sub, 'NEW_RETAILER', 'Shop registration submitted', `${shop.name} was registered and is ready for order booking.`],
+            );
+        }
         await connection.commit();
     } catch (error) {
         await connection.rollback();
@@ -263,6 +271,14 @@ shopRouter.post('/', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER, R
         message: `${shop.name} was added to the sales network.`,
         shopId: shop.id,
     });
+    if (req.auth.role === Role.AGENT) {
+        io?.to(`user:${req.auth.sub}`).emit('notification:created', {
+            type: 'NEW_RETAILER',
+            title: 'Shop registration submitted',
+            message: `${shop.name} was registered and is ready for order booking.`,
+            shopId: shop.id,
+        });
+    }
     res.status(201).json(shop);
 });
 
