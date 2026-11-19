@@ -89,6 +89,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
   const markerAnimationsRef = useRef(new Map<string, number>());
   const plannedRouteRef = useRef<L.Polyline>();
   const travelledRouteRef = useRef<L.Polyline>();
+  const travelledRoutesRef = useRef(new Map<string, L.Polyline>());
   const visitedStopMarkersRef = useRef<L.Marker[]>([]);
   const destinationMarkerRef = useRef<L.Marker>();
   const routeRequestRef = useRef<AbortController>();
@@ -120,6 +121,8 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
       markerPositionsRef.current.clear();
       plannedRouteRef.current = undefined;
       travelledRouteRef.current = undefined;
+      travelledRoutesRef.current.forEach((route) => route.remove());
+      travelledRoutesRef.current.clear();
       visitedStopMarkersRef.current = [];
       destinationMarkerRef.current = undefined;
       fittedRef.current = false;
@@ -131,6 +134,13 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
     if (!map) return;
     const positionedAgents = agents.filter(hasPosition);
     const visibleIds = new Set(positionedAgents.map((agent) => agent.id));
+
+    travelledRoutesRef.current.forEach((route, agentId) => {
+      if (!visibleIds.has(agentId)) {
+        route.remove();
+        travelledRoutesRef.current.delete(agentId);
+      }
+    });
 
     markersRef.current.forEach((marker, id) => {
       if (!visibleIds.has(id)) {
@@ -204,6 +214,28 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
         `${agent.name} · ${agent.trackingStatusLabel ?? 'Off Shift'} · ${agent.speedKmH} km/h`,
         { direction: 'top', offset: [0, -18] },
       );
+
+      const travelledPath = (agent.travelledPath?.length ? agent.travelledPath : agent.routeCoordinates ?? [])
+        .filter(isValidPoint);
+      if (travelledPath.length > 1) {
+        const routeColor = agent.trackingStatus === 'online'
+          ? '#2563eb'
+          : agent.trackingStatus === 'gps_delayed'
+            ? '#f59e0b'
+            : agent.trackingStatus === 'gps_unavailable'
+              ? '#111827'
+              : '#64748b';
+        const route = travelledRoutesRef.current.get(agent.id) ?? L.polyline([], {
+          color: routeColor,
+          opacity: selected ? 0.95 : 0.72,
+          weight: selected ? 6 : 4,
+          lineCap: 'round',
+          lineJoin: 'round',
+        }).addTo(map);
+        route.setStyle({ color: routeColor, opacity: selected ? 0.95 : 0.72, weight: selected ? 6 : 4 });
+        route.setLatLngs(travelledPath.map((point) => [point.lat, point.lng]));
+        travelledRoutesRef.current.set(agent.id, route);
+      }
     });
 
     if (!fittedRef.current && positionedAgents.length) {
@@ -224,8 +256,6 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
 
     plannedRouteRef.current?.remove();
     plannedRouteRef.current = undefined;
-    travelledRouteRef.current?.remove();
-    travelledRouteRef.current = undefined;
     visitedStopMarkersRef.current.forEach((marker) => marker.remove());
     visitedStopMarkersRef.current = [];
     destinationMarkerRef.current?.remove();
@@ -248,13 +278,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
     }
     markersRef.current.get(selected.id)?.openPopup();
 
-    const travelledPath = (selected.travelledPath?.length ? selected.travelledPath : selected.routeCoordinates).filter(isValidPoint);
-    if (travelledPath.length > 1) {
-      travelledRouteRef.current = L.polyline(
-        travelledPath.map((point) => [point.lat, point.lng]),
-        { color: '#7c3aed', opacity: .82, weight: 5 },
-      ).addTo(map);
-    }
+    const travelledPath = (selected.travelledPath?.length ? selected.travelledPath : selected.routeCoordinates ?? []).filter(isValidPoint);
     travelledPath.filter((point) => point.label).forEach((point, index) => {
       const icon = L.divIcon({
         className: '',
