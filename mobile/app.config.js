@@ -24,7 +24,8 @@ if (productionBuild && (!apiUrl.startsWith('https://') || /(?:localhost|127\.0\.
 module.exports = ({ config }) => ({
   ...config,
   name: 'repRoutes',
-  slug: 'reproutes-mobile',
+  // Keep this aligned with the existing EAS projectId below.
+  slug: 'tracksale-mobile',
   version: '1.0.0',
   orientation: 'portrait',
   scheme: 'reproutes',
