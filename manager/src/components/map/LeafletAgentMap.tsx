@@ -95,6 +95,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
   const destinationMarkerRef = useRef<L.Marker>();
   const routeRequestRef = useRef<AbortController>();
   const fittedRef = useRef(false);
+  const fittedAgentsRef = useRef('');
   const addressRef = useRef(new Map<string, string>());
 
   useEffect(() => {
@@ -181,7 +182,10 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
       if (!marker) {
         marker = L.marker([agent.coordinates.lat, agent.coordinates.lng], { icon })
           .addTo(map)
-          .on('click', () => onSelectAgent?.(agent));
+          .on('click', () => {
+            onSelectAgent?.(agent);
+            window.setTimeout(() => marker?.openPopup(), 0);
+          });
         markersRef.current.set(agent.id, marker);
         markerPositionsRef.current.set(agent.id, agent.coordinates);
       } else {
@@ -213,7 +217,10 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
           markerPositionsRef.current.set(agent.id, agent.coordinates);
         }
         marker.setIcon(icon);
-        marker.off('click').on('click', () => onSelectAgent?.(agent));
+        marker.off('click').on('click', () => {
+          onSelectAgent?.(agent);
+          window.setTimeout(() => marker?.openPopup(), 0);
+        });
       }
       if (selected) {
         marker.bindPopup(createAgentPopup(agent), { maxWidth: 320 });
@@ -227,13 +234,15 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
       );
     });
 
-    if (!fittedRef.current && positionedAgents.length) {
+    const positionedAgentKey = positionedAgents.map((agent) => agent.id).sort().join('|');
+    if (positionedAgentKey !== fittedAgentsRef.current && positionedAgents.length) {
       map.stop();
       map.fitBounds(
         L.latLngBounds(positionedAgents.map((agent) => [agent.coordinates.lat, agent.coordinates.lng])),
         { padding: [50, 50], maxZoom: 15 },
       );
       fittedRef.current = true;
+      fittedAgentsRef.current = positionedAgentKey;
     }
   }, [agents, onSelectAgent, selectedAgentId]);
 
@@ -267,7 +276,6 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
     if (!map.getCenter().equals(selectedPosition, 8) || map.getZoom() < 15) {
       map.setView(selectedPosition, Math.max(map.getZoom(), 15), { animate: false });
     }
-    markersRef.current.get(selected.id)?.openPopup();
 
     const plannedStops = selected.routeCoordinates.filter(isValidPoint);
     const travelledPath = (selected.travelledPath?.length ? selected.travelledPath : selected.routeCoordinates)
@@ -353,7 +361,6 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
             map.fitBounds(plannedRouteRef.current.getBounds(), { padding: [50, 50], maxZoom: 16, animate: false });
             const selectedMarker = markersRef.current.get(selected.id);
             selectedMarker?.bindPopup(createAgentPopup(selected, route, addressRef.current.get(selected.id)), { maxWidth: 320 });
-            selectedMarker?.openPopup();
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
